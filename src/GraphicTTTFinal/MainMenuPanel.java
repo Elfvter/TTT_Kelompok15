@@ -15,10 +15,10 @@ public class MainMenuPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
 
         JLabel title = new JLabel("Tic Tac Toe Menu");
-        title.setFont(new Font("Arial", Font.BOLD, 20));
+        title.setFont(new Font("Poppins", Font.BOLD, 20));
 
-        JButton btnVsPlayer = new JButton("Play vs Player");
-        JButton btnVsBot = new JButton("Play vs Bot");
+        JButton btnVsPlayer = new JButton("2 Pemain");
+        JButton btnVsBot = new JButton("1 Pemain");
         JButton btnLogout = new JButton("Logout");
 
         gbc.insets = new Insets(15, 10, 15, 10);

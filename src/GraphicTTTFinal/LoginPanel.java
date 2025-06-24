@@ -18,7 +18,7 @@ public class LoginPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
 
         JLabel titleLabel = new JLabel("Welcome to Tic Tac Toe");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Poppins", Font.BOLD, 16));
 
         JTextField usernameField = new JTextField(12);
         JPasswordField passwordField = new JPasswordField(12);

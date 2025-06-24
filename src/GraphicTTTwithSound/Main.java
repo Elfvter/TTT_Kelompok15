@@ -56,7 +56,7 @@ public class Main extends JPanel {
                         SoundEffect.EXPLODE.play();
                     }
                 } else {        // game over
-                    newGame();  // restart the game
+                     newGame();  // restart the game
                 }
                 // Refresh the drawing canvas
                 repaint();  // Callback paintComponent().

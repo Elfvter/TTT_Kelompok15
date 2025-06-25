@@ -2,166 +2,211 @@ package GraphicTTTFinal;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 public class Main extends JPanel {
     private static final long serialVersionUID = 1L;
 
     public static final String TITLE = "Tic Tac Toe";
-    public static final Color COLOR_BG = Color.WHITE;
-    public static final Color COLOR_BG_STATUS = new Color(216, 216, 216);
-    public static final Color COLOR_CROSS = new Color(239, 105, 80);
-    public static final Color COLOR_NOUGHT = new Color(64, 154, 225);
+
+    private enum ViewState { MENU, PLAYING }
 
     private Board board;
     private State currentState;
     private Seed currentPlayer;
-    private boolean hasShownDialog = false;
-    private CardLayout cardLayout;
-    private JPanel container;
 
-    public Main(CardLayout cardLayout, JPanel container) {
-        this.cardLayout = cardLayout;
-        this.container = container;
+    private Image backgroundImage;
 
-        addMouseListener(new MouseAdapter() {
+    private boolean isSinglePlayer = false;
+    private ViewState currentView = ViewState.MENU;
+
+    private JButton onePlayerButton, twoPlayerButton;
+    private JLabel titleLabel;
+
+    public Main() {
+        ImageIcon bgIcon = new ImageIcon(getClass().getResource("background.gif"));
+        backgroundImage = bgIcon.getImage();
+
+        setLayout(null);
+
+        titleLabel = new JLabel("TIC TAC TOE", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Minecraft", Font.BOLD, 36));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBounds(0, 80, Board.CANVAS_WIDTH, 60);
+        add(titleLabel);
+
+        onePlayerButton = new JButton("1 Player");
+        onePlayerButton.setBounds((Board.CANVAS_WIDTH - 140) / 2, 180, 140, 40);
+        onePlayerButton.setFont(new Font("Minecraft", Font.BOLD, 16));
+        onePlayerButton.addActionListener(e -> {
+            isSinglePlayer = true;
+            startGame();
+        });
+        add(onePlayerButton);
+
+        twoPlayerButton = new JButton("2 Player");
+        twoPlayerButton.setBounds((Board.CANVAS_WIDTH - 140) / 2, 240, 140, 40);
+        twoPlayerButton.setFont(new Font("Minecraft", Font.BOLD, 16));
+        twoPlayerButton.addActionListener(e -> {
+            isSinglePlayer = false;
+            startGame();
+        });
+        add(twoPlayerButton);
+
+        board = new Board();
+        board.setOpaque(false);
+        board.setBounds((Board.CANVAS_WIDTH - Board.CANVAS_WIDTH) / 2, 60, Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT);
+        board.setAlignmentX(CENTER_ALIGNMENT);
+        board.setAlignmentY(CENTER_ALIGNMENT);
+        board.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int mouseX = e.getX(), mouseY = e.getY();
-                int row = mouseY / Cell.SIZE, col = mouseX / Cell.SIZE;
+                if (currentView != ViewState.PLAYING) return;
 
-                if (currentState == State.PLAYING) {
-                    if (row >= 0 && row < Board.ROWS && col >= 0 && col < Board.COLS
-                            && board.cells[row][col].content == Seed.NO_SEED) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+
+                if (mouseX >= Board.X_OFFSET && mouseX < Board.X_OFFSET + Board.COLS * Cell.SIZE &&
+                        mouseY >= Board.Y_OFFSET && mouseY < Board.Y_OFFSET + Board.ROWS * Cell.SIZE) {
+
+                    int row = (mouseY - Board.Y_OFFSET) / Cell.SIZE;
+                    int col = (mouseX - Board.X_OFFSET) / Cell.SIZE;
+
+                    if (currentState == State.PLAYING &&
+                            board.cells[row][col].content == Seed.NO_SEED) {
+
                         currentState = board.stepGame(currentPlayer, row, col);
-                        currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
-                    }
 
-                    if (currentState == State.PLAYING) SoundEffect.DIE.play();
-                    else if (currentState == State.DRAW) SoundEffect.EAT_FOOD.play();
-                    else SoundEffect.EXPLODE.play();
-                } else {
-                    newGame();
+                        if (currentState == State.PLAYING) {
+                            currentPlayer = (currentPlayer == Seed.CROSS) ? Seed.NOUGHT : Seed.CROSS;
+
+                            if (isSinglePlayer && currentPlayer == Seed.NOUGHT) {
+                                makeAIMove();
+                                currentPlayer = Seed.CROSS;
+                            }
+                        }
+
+                        if (currentState == State.PLAYING) {
+                            SoundEffect.STEVE.play();
+                        } else {
+                            SoundEffect.DIE.play();
+                            showGameOverDialog(currentState);
+                        }
+
+                        repaint();
+                        board.repaint();
+                    }
                 }
-                repaint();
             }
         });
+        board.setVisible(false);
+        add(board);
 
-        setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30));
-        setBorder(BorderFactory.createLineBorder(COLOR_BG_STATUS, 2, false));
+        setPreferredSize(new Dimension(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT));
+        setAlignmentX(CENTER_ALIGNMENT);
+        setAlignmentY(CENTER_ALIGNMENT);
+    }
 
-        initGame();
+    private void startGame() {
+        currentView = ViewState.PLAYING;
+        titleLabel.setVisible(false);
+        onePlayerButton.setVisible(false);
+        twoPlayerButton.setVisible(false);
+        board.setVisible(true);
+
+        int panelWidth = getWidth();
+        int panelHeight = getHeight();
+        int boardX = (panelWidth - Board.CANVAS_WIDTH) / 2;
+        int boardY = (panelHeight - Board.CANVAS_HEIGHT) / 2;
+        board.setBounds(boardX, boardY, Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT);
+
+        revalidate();
+        repaint();
+
         newGame();
     }
 
-    public void initGame() {
-        board = new Board();
+    private void backToMenu() {
+        currentView = ViewState.MENU;
+        titleLabel.setVisible(true);
+        onePlayerButton.setVisible(true);
+        twoPlayerButton.setVisible(true);
+        board.setVisible(false);
     }
 
     public void newGame() {
-        for (int r = 0; r < Board.ROWS; r++)
-            for (int c = 0; c < Board.COLS; c++)
-                board.cells[r][c].content = Seed.NO_SEED;
+        board.newGame();
         currentPlayer = Seed.CROSS;
         currentState = State.PLAYING;
-        hasShownDialog = false; // reset flag
+        repaint();
+        board.repaint();
+    }
+
+    private void showGameOverDialog(State finalState) {
+        SwingUtilities.invokeLater(() -> {
+            String message;
+            if (finalState == State.CROSS_WON) {
+                message = "Permainan selesai!\nPemenang: Steve";
+            } else if (finalState == State.NOUGHT_WON) {
+                message = "Permainan selesai!\nPemenang: Skeleton";
+            } else {
+                message = "Permainan berakhir seri!";
+            }
+
+            int option = JOptionPane.showOptionDialog(
+                    this,
+                    message + "\nMau main lagi?",
+                    "Permainan Selesai",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    new String[]{"Main Lagi", "Kembali ke Menu"},
+                    "Main Lagi"
+            );
+            if (option == JOptionPane.YES_OPTION) {
+                newGame();
+            } else {
+                backToMenu();
+            }
+        });
+    }
+
+    private void makeAIMove() {
+        AiPlayer ai = new AiPlayer(Seed.NOUGHT);
+        Point move = ai.nextMove(board);
+
+        if (move != null) {
+            int row = move.y;
+            int col = move.x;
+            currentState = board.stepGame(Seed.NOUGHT, row, col);
+        }
     }
 
     @Override
-    public void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        setBackground(COLOR_BG);
-        board.paint(g);
 
-        if (currentState == State.DRAW && !hasShownDialog) {
-            hasShownDialog = true;
-            int option = JOptionPane.showOptionDialog(
-                    this,
-                    "Permainan berakhir seri!",
-                    "Hasil",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    new String[]{"Main Lagi", "Menu"},
-                    "Main Lagi"
-            );
-            if (option == JOptionPane.YES_OPTION) newGame();
-            else cardLayout.show(container, "MENU");
-        } else if (currentState == State.CROSS_WON && !hasShownDialog) {
-            hasShownDialog = true;
-            int option = JOptionPane.showOptionDialog(
-                    this,
-                    "Pemenangnya adalah: X",
-                    "Hasil",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    new String[]{"Main Lagi", "Menu"},
-                    "Main Lagi"
-            );
-            if (option == JOptionPane.YES_OPTION) newGame();
-            else cardLayout.show(container, "MENU");
-        } else if (currentState == State.NOUGHT_WON && !hasShownDialog) {
-            hasShownDialog = true;
-            int option = JOptionPane.showOptionDialog(
-                    this,
-                    "Pemenangnya adalah: O",
-                    "Hasil",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    new String[]{"Main Lagi", "Menu"},
-                    "Main Lagi"
-            );
-            if (option == JOptionPane.YES_OPTION) newGame();
-            else cardLayout.show(container, "MENU");
+        if (backgroundImage != null) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            float alpha = 0.75f;
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+            int imgWidth = backgroundImage.getWidth(this);
+            int imgHeight = backgroundImage.getHeight(this);
+            int x = (getWidth() - imgWidth) / 2;
+            int y = (getHeight() - imgHeight) / 2;
+            g2d.drawImage(backgroundImage, x, y, this);
+            g2d.dispose();
         }
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame(TITLE);
+            frame.setContentPane(new Main());
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT + 30);
-
-            CardLayout cardLayout = new CardLayout();
-            JPanel container = new JPanel(cardLayout);
-
-            Main gamePanel = new Main(cardLayout, container);
-            BotGame botGamePanel = new BotGame(cardLayout, container);
-
-            MainMenuPanel menuPanel = new MainMenuPanel(new MainMenuPanel.MenuCallback() {
-                public void onPlayVsPlayer() {
-                    gamePanel.newGame();
-                    cardLayout.show(container, "GAME");
-                }
-
-                public void onPlayVsBot() {
-                    botGamePanel.newGame();
-                    cardLayout.show(container, "BOT");
-                }
-
-                public void onLogout() {
-                    cardLayout.show(container, "LOGIN");
-                }
-            });
-
-            LoginPanel loginPanel = new LoginPanel(username -> {
-                cardLayout.show(container, "MENU");
-            });
-
-            container.add(loginPanel, "LOGIN");
-            container.add(menuPanel, "MENU");
-            container.add(gamePanel, "GAME");
-            container.add(botGamePanel, "BOT");
-
-            frame.setContentPane(container);
+            frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-
-            cardLayout.show(container, "LOGIN");
         });
     }
 }

@@ -17,8 +17,8 @@ import java.net.URL;
  *  however, not supported.
  */
 public enum Seed {   // to save as "Seed.java"
-    CROSS("X", "images/cross.gif"),   // displayName, imageFilename
-    NOUGHT("O", "images/not.gif"),
+    CROSS("X", "images/steve.jpg"),   // displayName, imageFilename
+    NOUGHT("O", "images/skeleton.gif"),
     NO_SEED(" ", null);
 
     // Private variables

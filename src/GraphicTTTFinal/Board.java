@@ -12,7 +12,6 @@ public class Board extends JPanel {
     public static final int GRID_WIDTH_HALF = GRID_WIDTH / 2;
     public static final Color COLOR_GRID = new Color(54, 35, 16);
 
-    // Ukuran total grid
     public static final int GRID_WIDTH_PIXEL = Cell.SIZE * COLS;
     public static final int GRID_HEIGHT_PIXEL = Cell.SIZE * ROWS;
 
@@ -103,7 +102,7 @@ public class Board extends JPanel {
 
         // Draw cells (with offset)
         Graphics2D g2d = (Graphics2D) g.create();
-        g2d.translate(X_OFFSET, Y_OFFSET);  // Offset semua isi ke tengah
+        g2d.translate(X_OFFSET, Y_OFFSET);
         for (int row = 0; row < ROWS; ++row) {
             for (int col = 0; col < COLS; ++col) {
                 cells[row][col].paint(g2d);

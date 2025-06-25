@@ -172,14 +172,37 @@ public class Main extends JPanel {
     }
 
     private void makeAIMove() {
-        AiPlayer ai = new AiPlayer(Seed.NOUGHT);
-        Point move = ai.nextMove(board);
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000); // Delay 1 detik (1000 ms)
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-        if (move != null) {
-            int row = move.y;
-            int col = move.x;
-            currentState = board.stepGame(Seed.NOUGHT, row, col);
-        }
+            AiPlayer ai = new AiPlayer(Seed.NOUGHT);
+            Point move = ai.nextMove(board);
+
+            if (move != null) {
+                int row = move.y;
+                int col = move.x;
+                currentState = board.stepGame(Seed.NOUGHT, row, col);
+
+                currentPlayer = Seed.CROSS;
+
+                // Periksa apakah permainan selesai
+                if (currentState == State.PLAYING) {
+                    SoundEffect.STEVE.play();
+                } else {
+                    SoundEffect.DIE.play();
+                    showGameOverDialog(currentState);
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    repaint();
+                    board.repaint();
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -207,6 +230,7 @@ public class Main extends JPanel {
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
+
         });
     }
 }

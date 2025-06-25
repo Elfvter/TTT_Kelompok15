@@ -35,7 +35,7 @@ public class Main extends JPanel {
         titleLabel.setBounds(0, 80, Board.CANVAS_WIDTH, 60);
         add(titleLabel);
 
-        onePlayerButton = new JButton("1 Player");
+        onePlayerButton = new JButton("1 Pemain");
         onePlayerButton.setBounds((Board.CANVAS_WIDTH - 140) / 2, 180, 140, 40);
         onePlayerButton.setFont(new Font("Minecraft", Font.BOLD, 16));
         onePlayerButton.addActionListener(e -> {
@@ -44,7 +44,7 @@ public class Main extends JPanel {
         });
         add(onePlayerButton);
 
-        twoPlayerButton = new JButton("2 Player");
+        twoPlayerButton = new JButton("2 Pemain");
         twoPlayerButton.setBounds((Board.CANVAS_WIDTH - 140) / 2, 240, 140, 40);
         twoPlayerButton.setFont(new Font("Minecraft", Font.BOLD, 16));
         twoPlayerButton.addActionListener(e -> {
